@@ -6,7 +6,7 @@ from tools import plot_many, matrix
 # ========== НАЧАЛЬНЫЕ ЗНАЧЕНИЯ =============
 n = int(input('Ввведите размерность матрицы: '))
 start_time = 0.0
-end_time = 10.0
+end_time = 0.1
 step = 1e-3
 
 t_vector = np.arange(start_time, end_time + step, step)
@@ -37,3 +37,8 @@ plot_many(y_axis = t_vector,funcs = rows_x,
           title=f"Метод Эйлера: X'(t) = A*X(t), Шаг - {step}", 
           xlab = 't, с', ylab = 'x(t)' )
 
+
+'''Проверить что я праивльное решение
+подставить в систему решения, найти производную'''
+dt = t_vector
+DXdt_num = np.diff(X,axis=)

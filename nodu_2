@@ -1,23 +1,31 @@
-# МЕТОД ЭЙЛЕРА
+# МЕТОД ЭЙЛЕРА для неоднородного уранения
 
 import numpy as np
-from tools import plot_many, matrix
+from tools import plot_many, matrix, plot_many_xlim
 
 # ========== НАЧАЛЬНЫЕ ЗНАЧЕНИЯ =============
-start_time = 0.0
+start_time = 0
 end_time = 10.0
 step = 1e-3
 
 t_vector = np.arange(start_time, end_time + step, step)
-samples = len(t_vector) # 10001
+samples = len(t_vector) 
 
-X0 = matrix([1.0, 0.0])
-COEF_MATRIX = matrix([[0.0, 1.0], [-20.0, -0.5]]) # ЗАДАНННАЯ МАТРИЦА
+X0 = matrix([2.0, 4.0])
+COEF_MATRIX = matrix([[-2, 1], 
+                      [1, -2]]) # ЗАДАНННАЯ МАТРИЦА
 
 spectr_mx = np.linalg.eigvals(COEF_MATRIX)
 print(spectr_mx)
 #========== МЕТОД ЭЙЛЕРА (НУЖЕН МАЛЕНЬКИЙ ШАГ) 
 
+# f(t)
+
+
+def f(t):
+    f1 = 1 - np.exp(-0.5*t)
+    f2 = 1/((t)**1/2 + 1)          # e^(0.5 t)
+    return np.array([f1, f2], dtype=float)
 
 # ОПРЕДЕЛЯЕМ МТАРИЦУ НУЛЕЙ ДЛЯ РЕШЕНИЯ
 size_matrix = (samples, 2)
@@ -25,32 +33,32 @@ X = np.zeros(size_matrix, dtype=float)
 X[0] = X0
 
 for n in range(samples - 1):
-    dXdt = COEF_MATRIX @ X[n] # Производная в текущей точке
+    t = t_vector[n]
+    dXdt = COEF_MATRIX @ X[n] + f(t) # Производная в текущей точке
     X[n+1] = X[n] + step*dXdt # Шаг Эйлера
 
 x1, x2 = X[:, 0], X[:, 1]
 
 plot_many(y_axis = t_vector,funcs = (x1,x2),
-          title=f"Метод Эйлера: X'(t) = A*X(t), Шаг - {step}", 
+          title=f"Метод Эйлера: X'(t) = A*X(t) + f(t), Шаг - {step}", 
           xlab = 't, с', ylab = 'x(t)' )
-plot_many(y_axis = x1 ,funcs = (x2,) ,
-          title="Фазовый портрет: траектория x1(x2(t))", 
-          xlab = 'x2(t)', ylab = 'x1(t)' )
+
 
 '''Проверить что я праивльное решение
 подставить в систему решения, найти производную'''
 # ====== Проверка решения: производная "по графику" vs A*X ======
-dt = step  # шаг по времени
+
+dt = step
+DXdt_num = np.diff(X, axis=0) / dt
+t_num = t_vector[:-1] # размерность на 1 меньше так как разностей на 1 меньше
+# поэтому время берём без последенего отсчёта
+
+AX = (COEF_MATRIX @ X[:-1].T).T                 # (N-1, 2)
+F  = np.array([f(t) for t in t_num], dtype=float)  # (N-1, 2)
+DXdt = AX + F
 
 
-DXdt_num = np.diff(X, axis=0) / dt          # shape: (samples-1, 2)
-t_num = t_vector[:-1]                       # время для этих производных
-
-DXdt = (COEF_MATRIX @ X[:-1].T).T     # shape: (samples-1, 2)
-
-
-err = DXdt_num - DXdt                # shape: (samples-1, 2)
-
+err = DXdt_num - DXdt
 # ====== Графики производных ======
 plot_many(
     y_axis=t_num,
@@ -69,7 +77,7 @@ plot_many(
 )
 
 # ====== График ошибки ======
-plot_many(
+plot_many_xlim(
     y_axis=t_num,
     funcs=(err[:, 0], err[:, 1]),
     title="График разности",
